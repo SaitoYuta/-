@@ -1,0 +1,47 @@
+%%time
+history = model.fit_generator(batch_iter(chunk,train),
+                              #train_iter2(chunk,chunk2,train,val),
+                              steps_per_epoch=133,#len(train_data_file_list),
+                              epochs=3, 
+                              #max_queue_size=process_count * 10,
+                              max_queue_size=33,
+                              validation_data=val_iter(chunk2,val),
+                              #validation_data=train_iter2(chunk,chunk2,train,val),
+                              validation_steps=1,#len(val_data_file_list),
+                              use_multiprocessing=False,#True,
+                              workers=1,
+                              shuffle=True,
+                              verbose=1,
+                             )
+                             
+                             
+                           
+def batch_iter(chunk,file):
+    while True:
+        try:
+            df=chunk.get_chunk(100000)
+        except:
+            chunk = pd.read_csv(file,chunksize=100000)
+            df=chunk.get_chunk(100000)
+            print('next')
+        
+        df=df[df['os_x'].astype(str)!='os_x']
+        df=df[df['os_y'].astype(str)!='os_y']
+        #df_p=df[df['label']==0]
+        #df_n=df[df['label']!=0]
+        #df_n=df_n.sample(round(len(df_p)*10))
+        #for i in range(15):
+        #    df=pd.concat([df,df_p])
+        
+        
+        df=df.sample(frac=1)
+        #print(df['label'].astype(int).value_counts())
+        Y=keras.utils.to_categorical(df['label'], 2)
+        x=df[features]
+        X=np.array(x)
+        yield X, Y
+    return data_generator()
+    
+    
+    
+chunk = pd.read_csv(ファイル名,chunksize=100000)
