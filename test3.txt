@@ -1,0 +1,48 @@
+i=0
+for df in chunk3:
+    df=df[df['os_x'].astype(str)!='os_x']
+    df=df[df['os_y'].astype(str)!='os_y']
+    
+    y=list(df['label'])
+    Y=keras.utils.to_categorical(df['label'].astype(int), 2)
+    x=df[features]
+    X=np.array(x)
+    
+    labels_pred=model1.predict_classes(X, verbose=1)
+    tp, fn, fp, tn = confusion_matrix(y, labels_pred).ravel()
+    fns=fns+fn
+    tns=tns+tn
+    zero_place=np.where(labels_pred ==0)
+    df=df.reset_index(drop=True)
+    df=df.iloc[zero_place]
+    
+    y=list(df['label'])
+    Y=keras.utils.to_categorical(df['label'].astype(int), 2)
+    x=df.drop(['label','country_x','country_y','country_label',],axis=1)
+    #print(df.columns)
+    X=np.array(x)
+    labels_pred=model2.predict_classes(X, verbose=1)
+    tp, fn, fp, tn = confusion_matrix(y, labels_pred).ravel()
+    tps=tps+tp
+    fns=fns+fn
+    fps=fps+fp
+    tns=tns+tn
+    
+    precision=tps/(tps+fps)
+    recall=tps/(tps+fns)
+    accuracy=(tps+tns)/(tps+tns+fps+fns)
+    f1=(2*precision*recall)/(precision+recall)
+    f2=((1+2*2)*precision*recall)/((2*2)*precision+recall)
+    f05=((1+0.5*0.5)*precision*recall)/((0.5*0.5)*precision+recall)
+    fpr=fp/(fp+tn)
+    fnr=fn/(tp+fn)
+    print('precision',precision)
+    print('recall',recall)
+    print('accuracy',accuracy)
+    print('f1',f1)
+    print('f2',f2)
+    print('f05',f05)
+    print('fpr',fpr)
+    print('fnr',fnr)
+    print('i',i)
+    i=i+1
