@@ -1,0 +1,101 @@
+def gen_list(folder_name,column_name,data,label,result,maxlen=3000):
+    error_count=0
+    df=read_hyou(folder_name)
+    
+    for i in range(len(df["NAME"])):
+        #print(i)
+        with open("data/"+folder_name+df["NAME"][i].lstrip('.'),'rb') as f:
+            try:
+                buf=f.read().decode("utf-8")
+                #print(type(buf))
+                buf=buf.replace("*"," * ")\
+                .replace(":"," : ")\
+                .replace(";"," ; ")\
+                .replace("\'"," \' ")\
+                .replace("\""," \" ")\
+                .replace("["," [ ")\
+                .replace("]"," ] ")\
+                .replace("("," ( ")\
+                .replace(")"," ) ")\
+                .replace("{"," { ")\
+                .replace("}"," } ")\
+                .replace("."," . ")\
+                .replace(","," , ")\
+                .replace("+"," + ")\
+                .replace("-"," - ")\
+                .replace("*"," * ")\
+                .replace("/"," / ")\
+                .replace("="," = ")\
+                .replace(">"," > ")\
+                .replace("<"," < ")\
+                .replace("%"," % ")
+                #.replace("\n"," \n ")
+                #.replace("%"," % ")\
+                #.replace(">"," > ")\
+                buf=buf.split()
+                
+                if len(buf) <= maxlen and len(buf)>0:
+                    result.extend(buf)
+                    data.append(buf)
+                    label.append(df[column_name][i])
+                else:
+                    error_count+=1
+            except:
+                error_count+=1
+    print(folder_name+":データ数",len(data))
+    print(folder_name+":ラベル数",len(label))
+    print("読み込みエラー数:",error_count)
+    
+    
+    
+def create_dataset(data,label,result,least=3,maxlen=3000):
+    # データセット作成
+    # 辞書を参照しながらリスト内の単語を定数に置換
+    x=[]
+    y=[]
+    b=[]
+    chars=Counter(result)
+    char_set=set(result)
+    char_indices=dict((c[0],i+1) for i,c in enumerate(chars.most_common()))
+    print("単語数",len(chars))
+    print("データ数",len(data))
+    print("ラベル数",len(label))
+    
+    small_count=0
+    c=chars.most_common()
+    for i in range(len(c)):
+        if c[i][1] <= least:
+            small_count+=1
+    max_features=len(c)-small_count+1 # 1から数字を振るので+1
+    
+    for i in range(len(data)):
+        b=[]
+        for original_val in data[i]:
+            if(original_val not in char_indices):
+                b.append(0)
+            elif char_indices[original_val] <= max_features:
+                b.append(char_indices[original_val])
+            else:
+                b.append(0)
+        x.append(b)
+    # 単語数を一定にする詰めと切り取り
+    x=sequence.pad_sequences(x, maxlen=maxlen)
+    y=np_utils.to_categorical(label,2)
+    
+    data_set=[]
+    data_o=[]
+    data_x=[]
+    
+    for i in range(len(y)):
+        # 検出したら
+        if y[i][1] == 1.0 :
+            data_o.append(([y[i],x[i]]))
+        # 違反していない場合
+        else:
+            data_x.append([y[i],x[i]])
+        data_set.append([y[i],x[i]])
+    print("違反ファイル",len(data_o))
+    print("違反していないファイル",len(data_x))
+    #x_train,y_train,x_test,y_test=over_sampling(data_o,data_x)
+    x,y=under_sampling(data_o,data_x)
+    return x,y,max_features
