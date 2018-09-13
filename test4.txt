@@ -1,0 +1,19 @@
+def create_model(max_features,sou=128単語数):
+    model = Sequential()
+    model.add(Embedding(max_features, sou, mask_zero=True))
+    model.add(Bidirectional(LSTM(sou,dropout=0.5, recurrent_dropout=0.5)))
+    #model.add(LSTM(128,dropout=0.5, recurrent_dropout=0.5))
+    #model.add(Dense(32, activation='relu'))
+    #model.add(Dense(128, activation='relu'))
+    model.add(Dense(2, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+    return model
+    
+    
+model.fit(x[train], y[train],
+              batch_size=batch_size,
+              epochs=epochs,
+              shuffle=True,
+              validation_data=(x[validation], y[validation]),)
